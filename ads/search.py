@@ -34,9 +34,7 @@ class Article(object):
             setattr(self, key, value)
 
     def __str__(self):
-        if six.PY3:
-            return self.__unicode__()
-        return self.__unicode__().encode("utf-8")
+        return self.__unicode__() if six.PY3 else self.__unicode__().encode("utf-8")
 
     def __unicode__(self):
         author = self.first_author or "Unknown author"
@@ -117,17 +115,16 @@ class Article(object):
         """
         if not hasattr(self, "id") or self.id is None:
             raise APIResponseError("Cannot query an article without an id")
-        sq = next(SearchQuery(q="id:{}".format(self.id), fl=field))
+        sq = next(SearchQuery(q=f"id:{self.id}", fl=field))
         # If the requested field is not present in the returning Solr doc,
         # return None instead of hitting _get_field again.
-        if field not in sq._raw:
-            # These fields will never be in the result solr document;
-            # pass through to __getattribute__ to allow the relevant
-            # secondary service queries
-            if field in ["reference", "citation", "metrics", "bibtex"]:
-                pass
-            else:
-                return None
+        if field not in sq._raw and field not in [
+            "reference",
+            "citation",
+            "metrics",
+            "bibtex",
+        ]:
+            return None
         value = sq.__getattribute__(field)
         self._raw[field] = value
         return value
@@ -238,18 +235,12 @@ class Article(object):
 
     @cached_property
     def reference(self):
-        q = SearchQuery(
-            q='references(id:{})'.format(self.id),
-            fl=['id', 'bibcode']
-        )
+        q = SearchQuery(q=f'references(id:{self.id})', fl=['id', 'bibcode'])
         return [a.bibcode for a in q]
 
     @cached_property
     def citation(self):
-        q = SearchQuery(
-            q='citations(id:{})'.format(self.id),
-            fl=['id', 'bibcode']
-        )
+        q = SearchQuery(q=f'citations(id:{self.id})', fl=['id', 'bibcode'])
         return [a.bibcode for a in q]
 
     @cached_property
@@ -321,7 +312,7 @@ class SolrResponse(APIResponse):
             self.numFound = self.response['numFound']
             self.docs = self.response['docs']
         except KeyError as e:
-            raise SolrResponseParseError("{}".format(e))
+            raise SolrResponseParseError(f"{e}")
 
     @property
     def articles(self):
@@ -388,20 +379,19 @@ class SearchQuery(BaseQuery):
                 cursorMark = "*"
             if sort is None and start is None:
                 sort = "score desc,id desc"
-            elif sort is None and start is not None:
+            elif sort is None:
                 sort = "score desc"
             else:
                 sort = sort.replace("+", " ")
-                sort = sort if " " in sort else "{} desc".format(sort)
+                sort = sort if " " in sort else f"{sort} desc"
                 # cursors require unique field in the sort
                 if "id" not in sort and start is None:
-                    sort = "{},id desc".format(sort)
+                    sort = f"{sort},id desc"
             if hl is not None:
                 hl_fl = list(set(hl))
                 for i in hl_fl:
                     if i not in self.HIGHLIGHT_FIELDS:
-                        raise Exception('Highlights can only be used for: {}'
-                                        .format(self.HIGHLIGHT_FIELDS))
+                        raise Exception(f'Highlights can only be used for: {self.HIGHLIGHT_FIELDS}')
                 hl = "true"
             else:
                 hl_fl = None
@@ -418,9 +408,7 @@ class SearchQuery(BaseQuery):
                 "rows": int(rows),
             }
             # Filter out None values
-            self._query = dict(
-                (k, v) for k, v in six.iteritems(_) if v is not None
-            )
+            self._query = {k: v for k, v in six.iteritems(_) if v is not None}
 
             # Include `id` as a field, always (could be None, string or list)
             self._query.setdefault("fl", ["id"])
@@ -441,14 +429,14 @@ class SearchQuery(BaseQuery):
                 for field, value in six.iteritems(kwargs):
                     if not re.match('\s*\(.*\)\s*', value):
                         # Wrap value in quotes if not already in parentheses
-                        value = u'"{}"'.format(value)
-                    self._query['q'] += u' {}:{}'.format(field, value)
+                        value = f'"{value}"'
+                    self._query['q'] += f' {field}:{value}'
 
         assert self._query.get('rows') > 0, "rows must be greater than 0"
         assert self._query.get('q'), "q must not be empty"
         assert self._query.get('cursorMark') is None or \
-            self._query.get('start') is None, \
-            "cursorMark and start are mutually exclusive parameters"
+                self._query.get('start') is None, \
+                "cursorMark and start are mutually exclusive parameters"
 
         if token is not None:
             self.token = token
@@ -470,7 +458,7 @@ class SearchQuery(BaseQuery):
         """
         if self.response is None:
             return "Query has not been executed"
-        return "{}/{}".format(len(self.articles), self.response.numFound)
+        return f"{len(self.articles)}/{self.response.numFound}"
 
     @property
     def query(self):
@@ -544,8 +532,10 @@ class SearchQuery(BaseQuery):
         recv_rows = int(self.response.responseHeader.get("params", {}).get("rows"))
         if recv_rows != self.query.get("rows"):
             self._query['rows'] = recv_rows
-            warnings.warn("Response rows did not match input rows. "
-                          "Setting this query's rows to {}".format(self.query['rows']))
+            warnings.warn(
+                f"Response rows did not match input rows. Setting this query's rows to {self.query['rows']}"
+            )
+
 
         self._articles.extend(self.response.articles)
         if self._query.get('start') is not None:
@@ -569,6 +559,6 @@ class query(SearchQuery):
             DeprecationWarning
         )
         if isinstance(args[0], six.string_types):
-            kwargs.update({'q': args[0]})
+            kwargs['q'] = args[0]
             args = args[1:]
         super(self.__class__, self).__init__(*args, **kwargs)

@@ -18,9 +18,7 @@ class MetricsResponse(APIResponse):
         self.metrics = http_response.json()
 
     def __str__(self):
-        if six.PY3:
-            return self.__unicode__()
-        return self.__unicode__().encode("utf-8")
+        return self.__unicode__() if six.PY3 else self.__unicode__().encode("utf-8")
 
     def __unicode__(self):
         return self.metrics

@@ -35,8 +35,7 @@ def get_pdf(article, debug=False):
 
     print('Retrieving {0}'.format(article))
 
-    identifier = [_ for _ in article.identifier if 'arXiv' in _]
-    if identifier:
+    if identifier := [_ for _ in article.identifier if 'arXiv' in _]:
         url = 'http://arXiv.org/pdf/{0}.{1}'.format(identifier[0][9:13],
             ''.join(_ for _ in identifier[0][14:] if _.isdigit()))
     else:
@@ -99,7 +98,7 @@ if __name__ == '__main__':
     else:
         now = localtime()
         year, month = (now.tm_year, now.tm_mon - 1)
-        if 1 > month: year, month = (year - 1, month)
+        if month < 1: year, month = (year - 1, month)
 
     print('Querying {0} / {1}'.format(year, month))
 

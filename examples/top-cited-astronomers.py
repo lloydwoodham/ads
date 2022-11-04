@@ -2,6 +2,7 @@
 
 """ Who are the most cited astronomers? """
 
+
 __author__ = "Andy Casey <acasey@mso.anu.edu.au>"
 
 import ads
@@ -30,12 +31,12 @@ for astronomer in successful_astronomers:
         rows=50,
         fl=['citation_count']
     )
-    total_citations[astronomer] = sum([paper.citation_count for paper in papers])
+    total_citations[astronomer] = sum(paper.citation_count for paper in papers)
 
 # Now there's a problem because astronomers publish under "Aaronson, A" and
 # "Aaronson, Aaron". Ugh!
 duplicate_astronomers = []
-for astronomer in total_citations.keys():
+for astronomer in total_citations:
     # Look out for "Groups" or "Teams"
     if "," not in astronomer and total_citations[astronomer] == 0:
         print("{0} looks like a group without any citations, so we're going to"
@@ -54,7 +55,7 @@ for astronomer in total_citations.keys():
         continue
 
     # Does this astronomer publish under a short name too?
-    if short_name in total_citations.keys():
+    if short_name in total_citations:
         print("{0} is a shorter version of {1}, so we're counting their "
               "citations together".format(short_name, astronomer))
         total_citations[astronomer] += total_citations[short_name]

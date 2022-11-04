@@ -19,9 +19,7 @@ class ExportResponse(APIResponse):
         self.result = http_response.json()['export']
 
     def __str__(self):
-        if six.PY3:
-            return self.__unicode__()
-        return self.__unicode__().encode("utf-8")
+        return self.__unicode__() if six.PY3 else self.__unicode__().encode("utf-8")
 
     def __unicode__(self):
         return self.result
@@ -42,8 +40,7 @@ class ExportQuery(BaseQuery):
         :type bibcodes: list or string
         :param format: format to export to
         """
-        assert format in self.FORMATS, "Format must be one of {}".format(
-            self.FORMATS)
+        assert format in self.FORMATS, f"Format must be one of {self.FORMATS}"
 
         self.format = format
 

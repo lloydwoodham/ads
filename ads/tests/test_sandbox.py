@@ -34,7 +34,7 @@ class TestSandbox(unittest.TestCase):
         Test you should receive stub data when accessing cached properties
         """
         sq = SearchQuery(q='fake bibcode', fl=['bibcode', 'id'])
-        b = [a for a in sq]
+        b = list(sq)
 
         citation_count = b[0].citation_count
         author = b[0].author

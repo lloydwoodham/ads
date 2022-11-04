@@ -2,6 +2,7 @@
 
 """ Beers for citations. The new underground currency. """
 
+
 __author__ = "Andy Casey <acasey@mso.anu.edu.au>"
 
 # Standard library
@@ -69,8 +70,10 @@ if (all_citations["total"] > all_citations_last_time["total"]
 
         print(message)
 
-        if not "PUSHOVER_TOKEN" in os.environ \
-        or not "PUSHOVER_USER" in os.environ:
+        if (
+            "PUSHOVER_TOKEN" not in os.environ
+            or "PUSHOVER_USER" not in os.environ
+        ):
             print("No pushover.net notification sent because PUSHOVER_TOKEN or"
                 " PUSHOVER_USER environment variables not found.")
             continue
@@ -88,7 +91,7 @@ if (all_citations["total"] > all_citations_last_time["total"]
             headers=headers
         )
         print(r.json())
-            
+
 else:
     print("No new citations!")
 

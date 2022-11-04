@@ -16,10 +16,10 @@ import ads.config  # For manually setting the token
 class _Singleton(type):
     _instances = {}
 
-    def __call__(cls, name, *args, **kwargs):
-        if name not in cls._instances:
-            cls._instances[name] = super(_Singleton, cls).__call__(name, *args, **kwargs)
-        return cls._instances[name]
+    def __call__(self, name, *args, **kwargs):
+        if name not in self._instances:
+            self._instances[name] = super(_Singleton, self).__call__(name, *args, **kwargs)
+        return self._instances[name]
 
     @classmethod
     def get_info(cls):
@@ -64,10 +64,7 @@ class RateLimits(Singleton):
         return self.limits
 
     def __str__(self):
-        return '{}: {}'.format(
-            self.name,
-            json.dumps(self.limits)
-        )
+        return f'{self.name}: {json.dumps(self.limits)}'
 
 
 class APIResponse(object):
@@ -148,11 +145,12 @@ class BaseQuery(object):
             self._session = requests.session()
             self._session.headers.update(
                 {
-                    "Authorization": "Bearer {}".format(self.token),
-                    "User-Agent": "ads-api-client/{}".format(__version__),
+                    "Authorization": f"Bearer {self.token}",
+                    "User-Agent": f"ads-api-client/{__version__}",
                     "Content-Type": "application/json",
                 }
             )
+
         return self._session
 
     def __call__(self):

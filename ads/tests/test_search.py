@@ -68,7 +68,7 @@ class TestArticle(unittest.TestCase):
             self.assertEqual(
                 self.article.__getattribute__(key),
                 value,
-                msg="Instance attribute and _raw mismatch on {}".format(key)
+                msg=f"Instance attribute and _raw mismatch on {key}",
             )
 
     def test_print_methods(self):

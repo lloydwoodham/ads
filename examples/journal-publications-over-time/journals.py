@@ -2,6 +2,7 @@
 
 """ Compile publication data for astronomy journals over the last 10 years. """
 
+
 from __future__ import division, print_function
 
 __author__ = "Andy Casey <acasey@mso.anu.edu.au>"
@@ -74,7 +75,7 @@ if __name__ == "__main__":
         }
 
         for year in range(years[0], years[1] + 1):
-            
+
             # Perform the query
             # We actually don't want all the results, we just want the metadata
             # which tells us how many publications there were
@@ -93,12 +94,9 @@ if __name__ == "__main__":
         if journal_data["total"] > 0:
             publication_data.append(journal_data)
 
-    sorted_publication_data = []
     totals = [journal["total"] for journal in publication_data]
     indices = sorted(range(len(totals)),key=totals.__getitem__)
-    for index in indices:
-        sorted_publication_data.append(publication_data[index])
-
+    sorted_publication_data = [publication_data[index] for index in indices]
     # Save the data
     with open('journal-publications.json', 'w') as fp:
         json.dump(sorted_publication_data, fp, indent=2)
